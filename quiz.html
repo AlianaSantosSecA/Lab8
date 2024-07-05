@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Country Flag Quiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Honk&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Honk", system-ui;
+      background-image: url(https://as2.ftcdn.net/v2/jpg/03/01/24/27/1000_F_301242711_VaC8C4rDQnz29ypegje5iyTECwwfRSFn.jpg);
+      display: flex;
+      background-repeat: no-repeat;
+      background-size: cover;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: black;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 5px;
+      color: #333;
+      font-size: 70px;
+    }
+
+    #question {
+      margin-bottom: 5px;
+      font-size: 40px;
+      color: white;
+      padding: 0.5px;
+      margin-top: 0.5px;
+    }
+
+    #flag-image {
+      display: block;
+      margin: 0 auto;
+      max-width: 80%;
+      height: 280px;
+      padding: 10px;
+      transition: transform 0.2s ease-in-out;
+      /* Smooth transition for movement */
+    }
+
+    .option {
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      font-family: "Honk", system-ui;
+      /* Apply Honk font family */
+      font-size: 20px;
+      /* Match the font size to the question */
+      transition: transform 0.2s ease-in-out;
+      /* Smooth transition for movement */
+    }
+
+    .option:active {
+      background-color: #ccc;
+      /* Change background color on click */
+    }
+
+    .option:hover {
+      transform: translateY(-3px);
+      /* Move option up on hover */
+    }
+
+    .option.correct {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .option.correct:hover {
+      transform: translateY(-3px);
+      /* Move correct option up on hover */
+    }
+
+    #feedback {
+      margin-top: 20px;
+      font-weight: bold;
+      color: white;
+    }
+
+    #score {
+      margin-top: 10px;
+      font-size: 20px;
+      color: white;
+    }
+
+    #overall-score {
+      margin-top: 20px;
+      font-size: 24px;
+      color: white;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Country Flag Quiz</h1>
+    <div id="question"></div>
+    <img id="flag-image" src="" alt="Flag" style="display: none;">
+    <div id="options"></div>
+    <button id="next-btn" style="display: none;">Next</button>
+    <div id="feedback"></div>
+    <div id="score">Score: <span id="correct-count">0</span></div>
+    <div id="overall-score">Overall Score: <span id="final-score"></span></div>
+  </div>
+
+  <script>
+    // Quiz data containing questions, flag images, options, and correct answers
+    const quizData = [
+      { question: "Which country does this flag belong to?", flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Flag_of_the_United_States_%28DoS_ECA_Color_Standard%29.svg/640px-Flag_of_the_United_States_%28DoS_ECA_Color_Standard%29.svg.png", options: ["United States", "United Kingdom", "France", "Germany"], answer: "United States" },
+      { question: "Identify this country's flag:", flag: "https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg", options: ["China", "Japan", "South Korea", "Vietnam"], answer: "Japan" },
+      { question: "This is the flag of:", flag: "https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg", options: ["India", "Pakistan", "Bangladesh", "Nepal"], answer: "India" },
+      { question: "Which country does this flag represent?", flag: "https://upload.wikimedia.org/wikipedia/en/thumb/0/05/Flag_of_Brazil.svg/640px-Flag_of_Brazil.svg.png", options: ["Brazil", "Argentina", "Chile", "Mexico"], answer: "Brazil" }
+    ];
+
+    let currentQuestion = 0; // Track the current question index
+    let correctCount = 0; // Track the number of correct answers
+    const questionElement = document.getElementById('question'); // Reference to the question display element
+    const flagImageElement = document.getElementById('flag-image'); // Reference to the flag image element
+    const optionsElement = document.getElementById('options'); // Reference to the options container element
+    const nextButton = document.getElementById('next-btn'); // Reference to the 'Next' button element
+    const feedbackElement = document.getElementById('feedback'); // Reference to the feedback display element
+    const scoreElement = document.getElementById('correct-count'); // Reference to the score display element
+    const overallScoreElement = document.getElementById('overall-score'); // Reference to the overall score display element
+    const finalScoreElement = document.getElementById('final-score'); // Reference to the final score display element
+
+    // Function to load and display the current question and options
+    function loadQuestion() {
+      const currentQuizData = quizData[currentQuestion]; // Get current quiz data based on current question index
+
+      // Display question and flag image
+      questionElement.textContent = currentQuizData.question;
+      flagImageElement.src = currentQuizData.flag;
+      flagImageElement.style.display = 'block';
+
+      // Clear previous options
+      optionsElement.innerHTML = '';
+
+      // Create buttons for each option
+      currentQuizData.options.forEach(option => {
+        const optionButton = document.createElement('button');
+        optionButton.classList.add('option');
+        optionButton.textContent = option;
+        optionButton.addEventListener('click', () => checkAnswer(option));
+        optionsElement.appendChild(optionButton);
+      });
+
+      // Clear feedback
+      feedbackElement.textContent = '';
+    }
+
+    // Function to check the user's answer
+    function checkAnswer(answer) {
+      const currentQuizData = quizData[currentQuestion]; // Get current quiz data based on current question index
+      const optionButtons = document.querySelectorAll('.option'); // Select all option buttons
+
+      // Disable all option buttons and remove click event listeners
+      optionButtons.forEach(button => {
+        button.removeEventListener('click', checkAnswer);
+        button.disabled = true;
+
+        // Add 'correct' class to the correct answer button
+        if (button.textContent === currentQuizData.answer) {
+          button.classList.add('correct');
+        }
+      });
+
+      // Provide feedback based on user's answer
+      if (answer === currentQuizData.answer) {
+        feedbackElement.textContent = 'Correct!';
+        correctCount++;
+        scoreElement.textContent = correctCount;
+      } else {
+        feedbackElement.textContent = `Wrong! The correct answer is: ${currentQuizData.answer}`;
+      }
+
+      // Move to the next question or show overall score
+      currentQuestion++;
+      if (currentQuestion < quizData.length) {
+        setTimeout(loadQuestion, 1500); // Delay before loading next question
+      } else {
+        showOverallScore();
+      }
+    }
+
+    // Function to display overall score after completing all questions
+    function showOverallScore() {
+      overallScoreElement.style.display = 'block';
+      finalScoreElement.textContent = `${correctCount} out of ${quizData.length}`;
+      nextButton.style.display = 'none';
+    }
+
+    // Event listener for 'Next' button to load next question
+    nextButton.addEventListener('click', () => {
+      loadQuestion();
+    });
+
+    // Start the quiz by loading the first question
+    loadQuestion();
+  </script>
+</body>
+
+</html>
